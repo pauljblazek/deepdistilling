@@ -30,7 +30,7 @@ Code is distilled or the shape orientation and MAXSAT problems here. Then it is 
 
 - neuron.py : file containing the Neuron class, which contains the weights and connectivity pattern of a neuron
 
-- preprocessing.py : contains some ancillary functions needed, such as rescaling weights and organizing indices of incoming neurons, as well as many short functions used in discovering for-loops and groups
+- utils.py : contains some ancillary functions needed, such as rescaling weights and organizing indices of incoming neurons, as well as many short functions used in discovering for-loops and groups
 
 ### Problem-specific files
 
