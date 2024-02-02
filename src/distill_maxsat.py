@@ -48,7 +48,8 @@ def test_code(distill_func, input_dims) -> None:
     num_clauses = np.unique(np.maximum(1, np.linspace(0, input_dims[1], 11)).astype(int))
 
     for nc in num_clauses:
-        print(f"{variables} vars, {nc} clausses -   :20", end="")
+        title_string = f"{variables} vars, {nc} clausses -   "
+        print(f"{title_string:<25}", end="")
         total_sat = [0, 0, 0]
 
         for _ in range(num_samples):
@@ -96,7 +97,8 @@ def test_code(distill_func, input_dims) -> None:
                     total_sat[alg_ind] += num_sat
         for alg_ind, alg in enumerate(algs):
             mean_sat = total_sat[alg_ind] / num_trials / num_samples
-            print(f"{alg}: {mean_sat:.2f}", end=" ")
+            result_string = f"{alg}: {mean_sat:.2f}"
+            print(f"{result_string:<20}", end=" ")
         print()
 
 

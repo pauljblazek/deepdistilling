@@ -50,7 +50,8 @@ def test_code(
             if result == label:
                 acc += 1
         acc /= len(indices)
-        print(f"Accuracy on {dataset_name} dataset: {acc:.3f}")
+        acc_statement = f"Accuracy on {dataset_name} dataset:"
+        print(f"{acc_statement:<35} {acc:.3f}")
 
     for key in datasets.keys():
         image_path, label_path = datasets[key]

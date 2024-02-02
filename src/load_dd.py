@@ -99,7 +99,7 @@ class MetaLayer:
         for cl_i, cl in enumerate(self.clusters):
             self.forloops.append(ForLoop(cl, act_fun, layer_number == 0, signs=signs))
             self.out_dims[cl_i] = cl.dims
-        if np.any(f.signs for f in self.forloops):
+        if any(f.signs for f in self.forloops):
             for f in self.forloops:
                 f.signs = True
             return True

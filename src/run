@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-set -ex
-
-# This is the master script for the capsule. When you click "Reproducible Run", the code in this file will execute.
-
-#Condense ENNs to code and then test their performance
-python -u \distill_orientation.py "$@"
-python -u \distill_maxsat.py "$@"

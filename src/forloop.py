@@ -308,15 +308,15 @@ class ForLoop:
 
     def set_function_string(self) -> None:
         def get_global_op(cluster: Cluster, num_tabs: int) -> str:
-            weights: List[float | int] = []
+            weights: List[int | float] = []
             num_el: List[int] = []
             bias = cluster.bias
             tabs = ""
             for _ in range(num_tabs):
                 tabs += "\t"
-            for f in cluster.parent_neuron.functions_per_weight:
-                weights.append(f.weights[0])
-                num_el.append(f.num_indices)
+            for func in cluster.parent_neuron.functions_per_weight:
+                weights.append(func.weights[0])
+                num_el.append(func.num_indices)
             kw_pairs = [kw for kw in cluster.key_weight_pairs]
 
             order = np.argsort([-w for w in weights])
@@ -328,7 +328,7 @@ class ForLoop:
                 kw_pair: List[Any] = list(kw_pairs[i])
                 kw_pair[1] = [1]
                 kw_pairs[i] = tuple(kw_pair)
-            fns = []
+            fns: List[str] = []
 
             fn = ""
 
@@ -343,8 +343,8 @@ class ForLoop:
                 if found_simple:
                     f = cluster.parent_neuron.input_symbol
                     f += str(kw[3])
-                    input_num = kw[3]
-                    if input_num == "":
+                    input_num_str = kw[3]
+                    if input_num_str == "":
                         input_num = 1
                     else:
                         input_num = int(input_num)
@@ -359,8 +359,8 @@ class ForLoop:
                         f = "part_sum"
                     fns.append(f)
 
-            altfns = []
-            printalt = []
+            altfns: List[str] = []
+            printalt: List[bool] = []
             for k, kw in enumerate(kw_pairs):
                 if len(kw[0]) > 0:
                     if kw[0] == "value":
@@ -393,32 +393,32 @@ class ForLoop:
                     fns = [f + ">0" for f in fns]
                 for case in cases:
                     case = [case[i] for i in np.argsort(np.sum(np.abs(case), axis=1))]
-                    f: str = ""
+                    f_str: str = ""
                     for c_i, c in enumerate(case):
                         if c_i > 0:
-                            f += " or "
+                            f_str += " or "
                         num = np.sum(np.abs(c))
                         if num > 1:
-                            f += "("
+                            f_str += "("
                         count = 0
                         for j in range(len(c)):
                             if c[j] == 0:
                                 continue
                             if count > 0:
-                                f += " and "
+                                f_str += " and "
                             count += 1
                             if c[j] > 0:
-                                f += fns[j]
+                                f_str += fns[j]
                             else:
-                                f += "(not " + fns[j] + ")"
+                                f_str += "(not " + fns[j] + ")"
 
                         if count == 0:
-                            f += "True"
+                            f_str += "True"
                         if count > 1:
-                            f += ")"
+                            f_str += ")"
                     # f += ":"
                     # f += "\r\n\t\t" + tabs
-                    case_ifs.append(f)
+                    case_ifs.append(f_str)
                 if len(case_ifs) == 1:
                     fn += self.assignment_string + " = " + case_ifs[0]
                     fn += "\r\n\t" + tabs
@@ -515,7 +515,7 @@ class ForLoop:
                         else:
                             add_el = ""
                         started = True
-                        fn += f"{add_el}if {altfns[case[0]]} == {case[1]}:\r\n\t\t"
+                        fn += f"{add_el}if {altfns[case[0]]} == {case[1]}:\r\n\t\t{tabs}"
 
                         if abs(case[2]) != num_el[1 - case[0]] - 1:
                             if_statement = f"if {altfns[1-case[0]]} GSIGN {case[2]}"
@@ -528,7 +528,7 @@ class ForLoop:
                         ):
                             altf = (fns[1 - case[0]].replace("np.sum(", ""))[:-1]
                             if_statement = f"ifGSIGN np.all({altf}==1)"
-                            assign_statement = ":\r\n\t\t\t{tabs}{self.assignment_string} = ASSIGN\r\n\t{tabs}"
+                            assign_statement = f":\r\n\t\t\t{tabs}{self.assignment_string} = ASSIGN\r\n\t{tabs}"
                             sgns = ["", " not"]
                         elif (
                             case[2] < 0
@@ -562,8 +562,8 @@ class ForLoop:
             return fn
 
         def check_means(
-            w: List[float | int], b: float, lims: List[float], fns: List[str], altfns: List[str]
-        ) -> Tuple[List[float | int], float, List[float], List[str], List[str]]:
+            w: List[int | float], b: float, lims: List[float], fns: List[str], altfns: List[str]
+        ) -> Tuple[List[int | float], float, List[float], List[str], List[str]]:
             new_weights = [w[i] * lims[i] for i in range(len(w))]
             mn = min(abs(n) for n in new_weights)
             if mn > 1:
@@ -577,7 +577,7 @@ class ForLoop:
             return w, b, lims, fns, altfns
 
         def check_all(
-            w: List[int | float], b: int | float, lims: List[int | float], fns: List[str], tabs: str
+            w: List[int | float], b: int | float, lims: List[int], fns: List[str], tabs: str
         ) -> Optional[str]:
             n = len(w)
             for i in range(2**n):
@@ -607,7 +607,7 @@ class ForLoop:
 
             return None
 
-        def check_any(w, b, lims, fns, tabs):
+        def check_any(w: List[int | float], b: float, lims: List[int], fns: List[str], tabs: str) -> Optional[str]:
             n = len(w)
             if n > 1:
                 return None
@@ -630,7 +630,7 @@ class ForLoop:
 
             return None
 
-        def get_fn_if_statements(w, b, fns, tabs):
+        def get_fn_if_statements(w: List[int | float], b: float, fns: List[str], tabs: str) -> str:
             if b == 0:
                 return get_simpler_if_statements(w, b, fns, tabs)
 
@@ -716,7 +716,7 @@ class ForLoop:
                     compare_string = "el" + compare_string
             return fn
 
-        def get_mult_cases(w: float, b: float, num_el: List[int]) -> Optional[List[List[List[int]]]]:
+        def get_mult_cases(w: List[int | float], b: float, num_el: List[int]) -> Optional[List[List[List[int]]]]:
             if any(n > 1 for n in num_el):
                 return None
 
@@ -814,9 +814,11 @@ class ForLoop:
 
             return cases
 
-        def get_bounds(w, b, a, val=-1):
-            z0 = [0, 0]
-            z1 = [0, 0]
+        def get_bounds(
+            w: List[int | float], b: float, a: List[float], val: int = -1
+        ) -> Tuple[List[List[float]], List[Tuple[int, int, bool, bool]]]:
+            z0 = [0.0, 0.0]
+            z1 = [0.0, 0.0]
             z0[0] = -(b + val * w[1] * a[1]) / w[0]
             z0[1] = -(b + w[1] * a[1]) / w[0]
             z1[0] = -(b + val * w[0] * a[0]) / w[1]
@@ -923,7 +925,7 @@ class ForLoop:
             result = res
             return result
 
-        def sum_function(w, b, f):
+        def sum_function(w: List[int | str], b: float, f: List[str]) -> str:
             fn_string = self.assignment_string + " = "
 
             order = np.argsort(w)[::-1]

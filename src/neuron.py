@@ -20,6 +20,7 @@ class Neuron:
     norm_unique_weights: List[float]
     function_type: str
     functions_per_weight: List[Function]
+    cluster_index: Optional[int]
 
     def __init__(
         self,
@@ -261,7 +262,7 @@ class Neuron:
         if sum(i == 1 for i in utils.get_all_elements(ref_present)) == 1:
             if sum(d > 1 for d in dims) == 1:
                 for r in range(len(ref_present)):
-                    if isinstance(ref_present[r], list):
+                    if isinstance(ref_present[r], (list, np.ndarray)):
                         if ref_present[r][0]:
                             index = r
                     elif ref_present[r]:

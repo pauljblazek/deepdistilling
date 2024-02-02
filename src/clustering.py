@@ -67,7 +67,7 @@ def cluster_algo(neurons: List[Neuron], find_clusters: bool = True) -> Tuple[Lis
         skip_neuron = get_neurons_to_skip(ind)
 
         if sum((not s) for s in skip_neuron) > 2:
-            lens = [len(np.unique(ind[:, i])) if not skip else np.inf for i, skip in enumerate(skip_neuron)]
+            lens = [len(np.unique(ind[:, i])) if not skip else 100000 for i, skip in enumerate(skip_neuron)]
             split = np.argmin(lens)
             if lens[split] < 3:
                 _, new_ids = np.unique(ind[:, split], return_inverse=True)
@@ -86,6 +86,7 @@ def cluster_algo(neurons: List[Neuron], find_clusters: bool = True) -> Tuple[Lis
                     clusters[i].cluster_index -= 1
                 del clusters[cl_i]
                 cl_i -= 1
+                continue
 
         # Sort neurons
         all_neuron_ind.extend(cluster.original_neuron_ids)
@@ -98,11 +99,9 @@ def cluster_algo(neurons: List[Neuron], find_clusters: bool = True) -> Tuple[Lis
         # ind = ind[new_ind]
 
         val_ind = [i for i in range(ind.shape[1]) if not skip_neuron[i]]
-        # starts: List[Optional[Tuple[str, str]]] = [None for _ in range(ind.shape[1])]
-        # stops: List[Optional[Tuple[str, str]]] = [None for _ in range(ind.shape[1])]
         starts: List[Dict[str, str]] = [{} for _ in range(ind.shape[1])]
         stops: List[Dict[str, str]] = [{} for _ in range(ind.shape[1])]
-        cluster.dims = [1 for _ in range(len(val_ind))]
+        cluster.dims = tuple(1 for _ in val_ind)
 
         order = [0 for _ in val_ind]
         step = len(val_ind)
@@ -125,29 +124,23 @@ def cluster_algo(neurons: List[Neuron], find_clusters: bool = True) -> Tuple[Lis
 
                 for s, st in enumerate([v_starts, v_stops]):
                     outputs[o][s] = {"type": "constant", "param": st[0]}
-                    # if np.all(st == st[0]):
-                    #     outputs[o][s] = ("i", st[0])
 
                 if any(out is None for out in outputs[o]):
                     linear_combo = utils.find_linear_combo_with_continue(unique_pre, v_starts, v_stops)
                     if linear_combo:
                         if any(linear_combo[0]["params"]):
                             outputs[o] = [{"type": "continue", "param": linear_combo[i]} for i in range(2)]
-                            # outputs[o][0] = ("c", linear_combo[0])
-                            # outputs[o][1] = ("c", linear_combo[1])
                         else:
                             outputs[o] = [{"type": "variable", "param": linear_combo[i]} for i in range(2)]
-                            # outputs[o][0] = ("v", linear_combo[0][0])
-                            # outputs[o][1] = ("v", linear_combo[1][0])
 
             output_scores = [-i for i in range(len(outputs))]
             for i, o_i in enumerate(outputs):
-                for o in o_i:
-                    if not o:
+                for output in o_i:
+                    if not output:
                         output_scores[i] += 1000
-                    elif o["type"] == "variable":
+                    elif output["type"] == "variable":
                         output_scores[i] += 100
-                    elif o["type"] == "continue":
+                    elif output["type"] == "continue":
                         output_scores[i] += 10
             best_ind = np.argmin(output_scores)
             v = val_ind[best_ind]
@@ -168,8 +161,8 @@ def cluster_algo(neurons: List[Neuron], find_clusters: bool = True) -> Tuple[Lis
         ):
             cluster.layer_table_indices = np.array(cluster.layer_table_indices)
 
-        new_starts: List[Optional[Tuple[str, str]]] = [None for _ in starts]
-        new_stops: List[Optional[Tuple[str, str]]] = [None for _ in starts]
+        new_starts: List[Dict[str, str]] = [{} for _ in starts]
+        new_stops: List[Dict[str, str]] = [{} for _ in starts]
         for i, v in enumerate(val_ind):
             new_starts[v] = starts[i]
             new_stops[v] = stops[i]
@@ -180,19 +173,13 @@ def cluster_algo(neurons: List[Neuron], find_clusters: bool = True) -> Tuple[Lis
             if skip_neuron[i]:
                 if skip_neuron[i]["type"] == "full":
                     starts[i] = {"type": "skip", "param": "full"}
-                    # starts[i] = ("s", "full")
                     stops[i] = {"type": "skip", "param": "full"}
-                    # stops[i] = ("s", "full")
                 elif skip_neuron[i]["type"] == "constant":
                     starts[i] = {"type": None, "param": skip_neuron[i]["value"]}
-                    # starts[i] = (None, skip_neuron[i]["value"])
                     stops[i] = {"type": None, "param": skip_neuron[i]["value"]}
-                    # stops[i] = (None, skip_neuron[i]["value"])
                 else:
                     starts[i] = {"type": "skip", "param": skip_neuron[i]["ref"]}
-                    # starts[i] = ("s", skip_neuron[i]["ref"])
                     stops[i] = {"type": "skip", "param": skip_neuron[i]["ref"]}
-                    # stops[i] = ("s", skip_neuron[i]["ref"])
 
         cluster.iterator_inds = [0 for _ in func_indices]
         for i, v in enumerate(val_ind):
@@ -224,7 +211,7 @@ def cluster_algo(neurons: List[Neuron], find_clusters: bool = True) -> Tuple[Lis
 def get_neurons_to_skip(ind: NDArray[np.int_]) -> List[Dict[str, Any]]:
     skip_neuron: List[Dict[str, Any]] = [{} for _ in range(ind.shape[1])]
     for i in range(ind.shape[1]):
-        if not skip_neuron[i]:
+        if skip_neuron[i]:
             continue
         if np.any(ind[:, i] < 0):
             skip_neuron[i] = {"type": "full"}
@@ -233,7 +220,7 @@ def get_neurons_to_skip(ind: NDArray[np.int_]) -> List[Dict[str, Any]]:
             skip_neuron[i] = {"type": "constant", "value": ind[0, i]}
             continue
         for j in range(i + 1, ind.shape[1]):
-            if skip_neuron[j] is not None:
+            if skip_neuron[j]:
                 continue
             if np.all(ind[:, i] - ind[:, j] == ind[0, i] - ind[0, j]):
                 # They are perfect offsets of each other
@@ -254,10 +241,12 @@ def get_layer_table_indices(
     layer_table_indices, _ = get_partial_indices(1, range0, st_ind, count, starts, stops, [])
 
     one_side_diagonal = (
-        len(st_ind) == 2 and sum(st[1]["param"][0] == 1 for st in [starts, stops] if st[1][0] == "variable") == 1
+        len(st_ind) == 2
+        and sum(st[1]["param"][0] == 1 for st in [starts, stops] if st[1]["param"] == "variable") == 1
     )
     one_side_diagonal = one_side_diagonal or (
-        len(st_ind) == 2 and sum(st[1]["param"][0][0] == 1 for st in [starts, stops] if st[1][0] == "continue") == 1
+        len(st_ind) == 2
+        and sum(st[1]["param"][0][0] == 1 for st in [starts, stops] if st[1]["param"] == "continue") == 1
     )
     if one_side_diagonal:
         # Let's reflect it

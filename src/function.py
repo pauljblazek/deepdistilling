@@ -5,7 +5,7 @@ from typing import Optional, List
 
 class Function:
     key: str
-    weights: List[float | int]
+    weights: List[int | float]
     is_present: bool
     index: Optional[int]
     input_id: Optional[str]
