@@ -1,6 +1,8 @@
 # Deep distilling
 
-This repository includes the code used to produce the results in the paper "Automated discovery of algorithms from data". We have developed a new method to automatically condense the weights in an essence neural network (ENN) into functioning computer code. Doing so allows for more readily discernible explainability, both by condensing a large number of parameters into a small number of lines of code, as well as by interpreting many aspects of the weights into such forms as for-loops, distilled variables, and logical functions.
+This repository includes code to produce results in the paper "Automated discovery of algorithms from data". This paper can be viewed at https://arxiv.org/abs/2111.08275. Our original work on essence neural networks (ENNs) can be accessed at https://www.nature.com/articles/s43588-021-00132-w or with this shareable PDF link: https://rdcu.be/cyfGB.
+
+This paper seeks to fully demonstrate the mechanistic interpretability of ENNs and show that it can be used for discovery of novel algorithms. We have developed deep distilling to automatically condense the weights in an ENN into functioning computer code. This mechanistic interpretability allows for more readily discernible explainability, both by condensing a large number of parameters into a small number of lines of code, as well as by interpreting many aspects of the weights into such forms as for-loops, distilled variables, and logical functions.
 
 ## Getting Started
 
@@ -8,15 +10,21 @@ Each of the two learning tasks shown here have a corresponding "distill_*.py" fi
 
 ### Prerequisites
 
-This code was implemented in Python 3.6.4 with Anaconda 4.4.10, scipy, scikit-learn, Keras 2.2.4, and Tensorflow 2.0.
+This code was implemented in Python 3.11.5
 
 ### Results
 
-Code is distilled or the shape orientation and MAXSAT problems here. Then it is tested against various test sets as described in the paper. The results are written to the screen and stored in the results>output file provided with Code Ocean for reproducible runs.
+Run the cell in the examples.ipynb notebook. Code is distilled on the shape orientation and MAXSAT problems. Then it is tested against various test sets as described in the paper.
 
 ## Files
 
-### Deep distilling files
+### Results files
+
+- examples.ipynb : notebook where code can be called to run the ENN condenser for the MAXSAT and orientation problems
+
+- output_*.py : files to which deep distilling writes its output code for the given problem
+
+### Deep distilling files (in /src/)
 
 - distill.py : general code used to call the necessary functions to condense an ENN and then test it; calls into load_dd.py
 
@@ -32,16 +40,14 @@ Code is distilled or the shape orientation and MAXSAT problems here. Then it is 
 
 - utils.py : contains some ancillary functions needed, such as rescaling weights and organizing indices of incoming neurons, as well as many short functions used in discovering for-loops and groups
 
-### Problem-specific files
+### Problem-specific files (in /src/)
 
 - distill_*.py : file to run distilling for the given problem
-
-- output_*.py : file to which deep distilling writes its output code for the given problem
 
 - general_maxsat.py : file containing pre-distilled code that generalizes the maxsat problem to any size (i.e., any number of clauses and variables)
 
 - maxsat.py : file containing the code necessary to generate test data for maxsat and test it against the distilled code
 
-### Data files
+### Data files (in /data/)
 
-Within the data>orientation and data>sat folders, ENN weights and biases are stored in the ENN subfolders, and training and test sets are stored in the train and test subfolders.
+Within the data/orientation and data/sat folders, ENN weights and biases are stored in the ENN subfolders, and training and test sets are stored in the train and test subfolders.
