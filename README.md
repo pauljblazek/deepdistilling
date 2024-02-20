@@ -1,8 +1,10 @@
 # Deep distilling
 
-This repository includes code to produce results in the paper "Automated discovery of algorithms from data". This paper can be viewed at https://arxiv.org/abs/2111.08275. Our original work on essence neural networks (ENNs) can be accessed at https://www.nature.com/articles/s43588-021-00132-w or with this shareable PDF link: https://rdcu.be/cyfGB.
+This repository includes code to produce results in the paper "Automated discovery of algorithms from data", which can be read at https://rdcu.be/dy2Go. The preprint is at https://arxiv.org/abs/2111.08275.
 
 This paper seeks to fully demonstrate the mechanistic interpretability of ENNs and show that it can be used for discovery of novel algorithms. We have developed deep distilling to automatically condense the weights in an ENN into functioning computer code. This mechanistic interpretability allows for more readily discernible explainability, both by condensing a large number of parameters into a small number of lines of code, as well as by interpreting many aspects of the weights into such forms as for-loops, distilled variables, and logical functions.
+
+Our original work on essence neural networks (ENNs) can be accessed at https://www.nature.com/articles/s43588-021-00132-w or with this shareable PDF link: https://rdcu.be/cyfGB.
 
 ## Getting Started
 
